@@ -5,40 +5,34 @@
  */
 
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import { View, Image, TouchableOpacity, Modal, Text, ListView, Platform } from 'react-native';
-import _ from 'lodash';
+import R from 'ramda';
+import nodeEmoji from 'node-emoji';
 
 import cca2List from '../data/cca2';
 import { getHeightPercent } from './ratio';
 import CloseButton from './CloseButton';
 import styles from './CountryPicker.style';
+import countries from '../data/countries-emoji';
 
-let countries = null;
-let Emoji = null;
-
-// Maybe someday android get all flags emoji
-// but for now just ios
-// const isEmojiable = Platform.OS === 'ios' ||
-// (Platform.OS === 'android' && Platform.Version >= 21);
-const isEmojiable = Platform.OS === 'ios';
-
-if (isEmojiable) {
-  countries = require('../data/countries-emoji');
-  Emoji = require('react-native-emoji').default;
-} else {
-  countries = require('../data/countries');
-
-  Emoji = <View />;
-}
+const Emoji = ({ name } = {}) => { // had to replace react-native-emoji b/c of PropTypes error
+  const emoji = nodeEmoji.get(name);
+  const fontSize = Platform.OS === 'ios' ? 30 : 25;
+  return (<Text style={{ fontSize }}>{emoji}</Text>);
+};
 
 const ds = new ListView.DataSource({ rowHasChanged: (r1, r2) => r1 !== r2 });
 
+export const getAllCountries = () => countries;
+
 export default class CountryPicker extends Component {
   static propTypes = {
-    cca2: React.PropTypes.string.isRequired,
-    translation: React.PropTypes.string,
-    onChange: React.PropTypes.func.isRequired,
-    closeable: React.PropTypes.bool,
+    cca2: PropTypes.string.isRequired,
+    translation: PropTypes.string,
+    onChange: PropTypes.func.isRequired,
+    closeable: PropTypes.bool,
+    children: PropTypes.node,
   }
   static defaultProps = {
     translation: 'eng',
@@ -73,7 +67,7 @@ export default class CountryPicker extends Component {
   }
 
   openModal = this.openModal.bind(this);
-  letters = _
+  letters = R
     .range('A'.charCodeAt(0), 'Z'.charCodeAt(0) + 1)
     .map(n => String.fromCharCode(n).substr(0));
 
@@ -123,6 +117,7 @@ export default class CountryPicker extends Component {
         key={index}
         onPress={() => this.scrollTo(letter)}
         activeOpacity={0.6}
+        style={{ paddingHorizontal: 10 }}
       >
         <View style={styles.letter}>
           <Text style={styles.letterText}>{letter}</Text>
@@ -165,7 +160,7 @@ export default class CountryPicker extends Component {
   renderFlag(cca2) {
     return (
       <View style={styles.itemCountryFlag}>
-        {isEmojiable ? this.renderEmojiFlag(cca2) : this.renderImageFlag(cca2)}
+        {this.renderEmojiFlag(cca2)}
       </View>
     );
   }
@@ -177,9 +172,11 @@ export default class CountryPicker extends Component {
           onPress={() => this.setState({ modalVisible: true })}
           activeOpacity={0.7}
         >
-          <View style={styles.touchFlag}>
-            {this.renderFlag(this.props.cca2)}
-          </View>
+          {this.props.children || (
+            <View style={styles.touchFlag}>
+              {this.renderFlag(this.props.cca2)}
+            </View>
+          )}
         </TouchableOpacity>
         <Modal
           visible={this.state.modalVisible}
@@ -188,7 +185,7 @@ export default class CountryPicker extends Component {
           <View style={styles.modalContainer}>
             {
               this.props.closeable &&
-                <CloseButton onPress={() => this.setState({ modalVisible: false })} />
+              <CloseButton onPress={() => this.setState({ modalVisible: false })} />
             }
             <ListView
               contentContainerStyle={styles.contentContainer}
@@ -201,7 +198,7 @@ export default class CountryPicker extends Component {
                 ({ nativeEvent: { layout: { y: offset } } }) => this.setVisibleListHeight(offset)
               }
             />
-            <View style={styles.letters}>
+            <View style={[styles.letters, { right: 0 }]}>
               {this.letters.map((letter, index) => this.renderLetters(letter, index))}
             </View>
           </View>
