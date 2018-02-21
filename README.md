@@ -112,6 +112,7 @@ AppRegistry.registerComponent('example', () => Example);
 | translation | string | 'eng' | The language display for the name of the country  |
 | onChange | function | *required | The handler when a country is selected |
 | closeable | bool | false | If true, the CountryPicker will have a close button |
+| hideAlphabet | bool | false | If true, side alphabet scroll will be hidden
 
 ## Dependencies
 - world-countries : https://www.npmjs.com/package/world-countries

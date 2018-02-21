@@ -23,6 +23,7 @@ const Emoji = ({ name } = {}) => { // had to replace react-native-emoji b/c of P
 };
 
 const ds = new ListView.DataSource({ rowHasChanged: (r1, r2) => r1 !== r2 });
+const countriesDs = ds.cloneWithRows(cca2List);
 
 export const getAllCountries = () => countries;
 
@@ -33,15 +34,15 @@ export default class CountryPicker extends Component {
     onChange: PropTypes.func.isRequired,
     closeable: PropTypes.bool,
     children: PropTypes.node,
+    hideAlphabet: PropTypes.bool
   }
+
   static defaultProps = {
     translation: 'eng',
   }
 
   state = {
-    modalVisible: false,
-    cca2List,
-    dataSource: ds.cloneWithRows(cca2List),
+    modalVisible: false
   };
 
   onSelectCountry(cca2) {
@@ -104,7 +105,6 @@ export default class CountryPicker extends Component {
       <TouchableOpacity
         key={index}
         onPress={() => this.onSelectCountry(country)}
-        activeOpacity={0.99}
       >
         {this.renderCountryDetail(country)}
       </TouchableOpacity>
@@ -172,11 +172,7 @@ export default class CountryPicker extends Component {
           onPress={() => this.setState({ modalVisible: true })}
           activeOpacity={0.7}
         >
-          {this.props.children || (
-            <View style={styles.touchFlag}>
-              {this.renderFlag(this.props.cca2)}
-            </View>
-          )}
+          {this.props.children || null}
         </TouchableOpacity>
         <Modal
           visible={this.state.modalVisible}
@@ -190,7 +186,7 @@ export default class CountryPicker extends Component {
             <ListView
               contentContainerStyle={styles.contentContainer}
               ref={listView => this._listView = listView}
-              dataSource={this.state.dataSource}
+              dataSource={countriesDs}
               renderRow={country => this.renderCountry(country)}
               initialListSize={30}
               pageSize={countries.length - 30}
@@ -198,9 +194,9 @@ export default class CountryPicker extends Component {
                 ({ nativeEvent: { layout: { y: offset } } }) => this.setVisibleListHeight(offset)
               }
             />
-            <View style={[styles.letters, { right: 0 }]}>
+            {!this.props.hideAlphabet && <View style={[styles.letters, { right: 0 }]}>
               {this.letters.map((letter, index) => this.renderLetters(letter, index))}
-            </View>
+            </View>}
           </View>
         </Modal>
       </View>
